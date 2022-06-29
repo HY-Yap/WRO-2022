@@ -1,0 +1,147 @@
+'THIS IS THE FIRST DRAFT SO EVERYTHING MIGHT NOT WORK
+
+'sensor intialisation
+
+Sensor.SetMode(1, 0)
+Sensor.SetMode(2, 0)  'Light sensors'
+Sensor.SetMode(4, 0)
+Sensor.SetMode(3, 0) 'gyro'
+
+
+'variables:
+
+'pid
+
+error = 0
+prevError = 0
+kp = 0 
+
+'other variables
+
+startArea = 0
+targetValue = 0
+threshold = 0
+
+'variables for making the gyro reset
+
+currentAng = Sensor.ReadRawValue(3)
+startAng = 0
+
+
+'Invert motors
+
+Motor.Invert("B")
+Motor.Invert("C")
+
+
+'wallbang sensor thing
+
+If Sensor.ReadPercent(1) > 50 Or Sensor(2) < 10 Then 
+  startArea = 1
+  Speaker.Note(100,"C4",500)
+Else 
+  startArea = 2
+  Speaker.Note(100,"D4",500)  
+EndIf
+
+Sub gyroReset
+  While currentAng - startAng < 180 'if the gyro reading is less than 180, turn left
+    Motor.StartSync(BC, -100, 100)
+  EndWhile
+  
+  While currentAng - startAng > 180 'if the gyro reading is more than 180, then turn right
+    Motor.StartSync(BC, 100, -100) 
+  EndWhile
+  
+EndSub
+
+ 
+Sub Pturn 181-360
+  'gyro reset'
+  error = targetValue - Sensor.ReadRawValue(3)
+  While error != 0 
+    error = targetValue - Sensor.ReadRawValue(3)
+    Motor.Move(C, error * kp)
+    Motor.Move(B, error * (kp * -1) ) 
+  EndWhile
+  
+  Motor.Stop(BC)
+  
+  If Sensor.ReadRawValue(3) = targetValue
+    Speaker.Note(100, "C4", 500) 'P turn successful' 
+   EndIf
+ EndSub
+ 
+ Sub Pturn 0 - 180 
+   gyroReset()
+   error = targetValue - Sensor.ReadRawValue(3)
+   While error != 0
+    Motor.move(C, error*kp)
+    Motor.move(B, error* (kp * -1) ) 
+    error = targetValue - Sensor.ReadRawValue(3) 
+  EndWhile
+  
+  Motor.Stop(BC)
+  
+  If Sensor.ReadRawValue(3) = targetValue
+    Speaker.Note(100, "C4", 500) 'P turn successful' 
+    
+EndSub
+  
+  
+Sub StartArea1
+  
+EndSub
+
+
+Sub StartArea2
+  Speaker.Note(100, "C4", 500) 'successful detection'
+  Motor.Move(B, 100, 1080) 'move B forward for 1080 degrees, 3 rotations'
+  Motor.Move(C, 100, 1080) 'move C forward for 1080 degrees, 3 rotations'
+  Motor.ResetCount(B,C) 'reset motors'
+  
+  While Sensor.ReadPercent(4) < 10 'until 4 threshold < 10'
+    Motor.StartSync(BC, 100, 100)
+    Motor.ResetCount(B,C)  'reset motor degrees again for accuracy'
+  EndWhile
+  
+  Speaker.Note(100, "C4", 500) 'horizontal line detected' 
+  Motor.Stop(BC) 'stop at the horizontal line'
+  Motor.Move(C, -100, 360) 
+  Motor.ResetCount(B,C) 'reset'
+  Motor.Move(B, -100) ' ] run backwards'
+  Motor.Move(C, -100) '] run backwards'
+  Program.Delay(1000)
+  
+  Motor.Stop(BC)
+  Speaker.Note(100, "C4", 500) 'wallbang'
+  Motor.ResetCount(B,C) 
+  
+  
+  
+  While Sensor.ReadPercen(4) < 10 'until 4 threshold < 10'
+    Motor.Move(C, -50)
+  EndWhile
+  Motor.Stop(C)
+  
+  Speaker.Note(100, "C4", 500) 'Vertical line detected'
+  
+  targetValue = -90 'values for pid'
+  kp = 0.1
+  
+  gyroReset()
+  
+  error = targetValue - Sensor(3)
+  While error != 0 
+    error = targetValue - Sensor(3)
+    Motor.Move(C, error * kp)
+    Motor.Move(B, error * (kp * -1) ) 
+  EndWhile
+  
+  Motor.Stop(BC)
+  
+  If Sensor.ReadPercent(3) = targetValue
+    Speaker.Note(100, "C4", 500) 'P turn successful' 
+   EndIf
+  
+EndSub
