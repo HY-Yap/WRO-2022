@@ -1,4 +1,4 @@
-# Han Yang & Christopher's WRO-2022 Repository
+# Han Yang & Christopher's NRC-2022 Repository
 Team name: MALA CHICKEN RICE 🌶🐔
 
 This repository documents Han Yang & Christopher's journey through the World Robot Olympiad 2021 Regular Category (Junior)
