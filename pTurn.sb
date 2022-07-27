@@ -30,15 +30,45 @@ Sub pTurnError 'calculate new currentAngle, diffAngle and error
 EndSub
 
 Sub pTurn 'before using this function, define startAngle & targetAngle
-  integral = 2
+  integral = 0
   lastError = 0
   pTurnError()
   While diffAngle <> targetAngle 'or error <> 0 (they mean the same thing)
       integral = error + integral
       derivative = error - lastError
-      last_error = error
-      speed =  (error * 0.01) + (integral * 0.001) + (derivative * 0)
+      lastError = error
+      speed =  (error * 0.45) + (integral * 0.0005) + (derivative * 1)
       Motor.StartSync("BC",speed,-speed)
+      pTurnError()
+  EndWhile
+  Motor.Stop("BC","True")
+EndSub
+
+Sub LpTurn 'before using this function, define startAngle & targetAngle
+  integral = 0
+  lastError = 0
+  pTurnError()
+  While diffAngle <> targetAngle 'or error <> 0 (they mean the same thing)
+      integral = error + integral
+      derivative = error - lastError
+      lastError = error
+      speed =  (error * 0.45) + (integral * 0.0005) + (derivative * 1)
+      Motor.StartSync("BC",speed,0)
+      pTurnError()
+  EndWhile
+  Motor.Stop("BC","True")
+EndSub
+
+Sub RpTurn 'before using this function, define startAngle & targetAngle
+  integral = 0
+  lastError = 0
+  pTurnError()
+  While diffAngle <> targetAngle 'or error <> 0 (they mean the same thing)
+      integral = error + integral
+      derivative = error - lastError
+      lastError = error
+      speed =  (error * 0.45) + (integral * 0.0005) + (derivative * 1)
+      Motor.StartSync("BC",0,-speed)
       pTurnError()
   EndWhile
   Motor.Stop("BC","True")
@@ -47,11 +77,12 @@ EndSub
 '##############################################################
 
 
-'Code
+'Example Code
 
 startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
-Motor.Move("B",40,400,"True") 'rotate
-Program.Delay(500)
+Speaker.Tone(100,1000,1000)
+Program.Delay(1000)
 targetAngle = 90
 pTurn()
-Program.Delay(500)
+Speaker.Tone(100,1000,1000)
+Program.Delay(1000)
