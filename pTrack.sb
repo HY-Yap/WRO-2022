@@ -13,7 +13,7 @@ startAngle = 0
 thres = 275
 lastError = 0
 
-baseSpeed=30
+baseSpeed=0
 
 '##############################################################
 
@@ -38,7 +38,7 @@ Sub readVal
 EndSub
 
 
-Sub pTrack
+Sub pTrack 'before using this function, define baseSpeed
   error = lightVal[0] - thres
   derivative = error - lastError
   speed =  error * 0.02 + derivative * 1
@@ -46,10 +46,13 @@ Sub pTrack
   lastError = error
 EndSub
 
+'##############################################################
 
-'Example code
+
+'Example Code
+
+baseSpeed = 20
 While "True"
   readVal()
   pTrack()
 EndWhile
-
