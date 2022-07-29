@@ -1,0 +1,137 @@
+'RUN ONLY WHEN ON FULL BATTERY
+
+Sensor.SetMode(1, 0) 'left light sensor NXT - RGB
+Sensor.SetMode(2, 0)  'right light sensor NXT - RGB
+Sensor.SetMode(4, 4) 'line tracking sensor  - RGB
+Sensor.SetMode(3, 0) 'gyro
+
+
+'Variables to be initialised
+
+targetAngle = 0
+startAngle = 0
+
+thres = 275
+lastError = 0
+
+baseSpeed=30
+
+'##############################################################
+
+
+'Invert motors
+
+Motor.Invert("B") 'left motor
+'right motor is C, no need to invert
+
+'##############################################################
+
+
+'Functions
+
+Sub pTurnError 'calculate new currentAngle, diffAngle and error
+  currentAngle = Sensor.ReadRawValue(3,0) 'current angle = gyro value
+  diffAngle = currentAngle - startAngle
+  error = targetAngle - diffAngle
+EndSub
+
+Sub pTurn 'before using this function, define startAngle & targetAngle
+  integral = 0
+  lastError = 0
+  pTurnError()
+  While diffAngle <> targetAngle 'or error <> 0 (they mean the same thing)
+      integral = error + integral
+      derivative = error - lastError
+      lastError = error
+      speed =  (error * 0.45) + (integral * 0.0005) + (derivative * 1)
+      Motor.StartSync("BC",speed,-speed)
+      pTurnError()
+  EndWhile
+  Motor.Stop("BC","True")
+EndSub
+
+Sub LpTurn 'before using this function, define startAngle & targetAngle
+  integral = 0
+  lastError = 0
+  pTurnError()
+  While diffAngle <> targetAngle 'or error <> 0 (they mean the same thing)
+      integral = error + integral
+      derivative = error - lastError
+      lastError = error
+      speed =  (error * 0.45) + (integral * 0.0005) + (derivative * 1)
+      Motor.StartSync("BC",speed,0)
+      pTurnError()
+  EndWhile
+  Motor.Stop("BC","True")
+EndSub
+
+Sub RpTurn 'before using this function, define startAngle & targetAngle
+  integral = 0
+  lastError = 0
+  pTurnError()
+  While diffAngle <> targetAngle 'or error <> 0 (they mean the same thing)
+      integral = error + integral
+      derivative = error - lastError
+      lastError = error
+      speed =  (error * 0.45) + (integral * 0.0005) + (derivative * 1)
+      Motor.StartSync("BC",0,-speed)
+      pTurnError()
+  EndWhile
+  Motor.Stop("BC","True")
+EndSub
+
+Sub readVal
+  rawValue = Sensor.ReadRaw(4,3) 'read RGB values of the floor
+  rawValueL = Sensor.ReadRaw(1,3) 'read RGB values of left
+  rawValueR = Sensor.ReadRaw(2,3) 'read RGB values of right
+  lightVal[0] = rawValue[0] + rawValue[1] + rawValue[2]
+  lightVal[1] = rawValueL[0] + rawValueL[1] + rawValueL[2]
+  lightVal[2] = rawValueR[0] + rawValueR[1] + rawValueR[2]
+EndSub
+
+
+Sub pTrack 'before using this function, define baseSpeed
+  error = lightVal[0] - thres
+  derivative = error - lastError
+  speed =  error * 0.02 + derivative * 1
+  Motor.StartSync("BC",Math.Max(Math.Min((baseSpeed + speed),100),-100),Math.Max(Math.Min((baseSpeed - speed),100),-100))
+  lastError = error
+EndSub
+
+
+'##############################################################
+
+
+'Code
+
+Program.Delay(1000)
+Motor.MoveSync("BC",95,100,1080,"True") 'move forward 3 rotations
+
+readVal()
+While lightVal[0] > 90
+ Motor.StartSync("BC",50,40)
+ readVal()
+EndWhile
+Motor.Stop("BC","True") 'stop when a black horizontal line is detected
+
+Motor.MoveSync("BC",-30,30,200,"True") 'rotate
+Motor.Start("BC",-100) 'wall bang
+Program.Delay(1000) 'pause
+Motor.Stop("BC","True") 'stop
+
+
+startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
+Speaker.Tone(100,1000,500)
+Program.Delay(500)
+targetAngle = 90
+LpTurn() 'turn 90 degrees
+Speaker.Tone(100,1000,1000)
+Program.Delay(1000)
+
+
+baseSpeed = 20
+readVal()
+While lightVal[0] <> 129 'line track until senses blue
+  readVal()
+  pTrack()
+EndWhile
