@@ -105,29 +105,6 @@ Sub readVal
   lightVal[2] = rawValueR[0] + rawValueR[1] + rawValueR[2]
 EndSub
 
-Sub readCol
-    LCD.StopUpdate()
-    LCD.Clear()
-    readVal()
-    LCD.Text(1,1,1,2,rawValueR[0]) 'R of right
-    LCD.Text(1,60,1,2,rawValueR[1]) 'G of right
-    LCD.Text(1,120,1,2,rawValueR[2]) 'B of right
-    LCD.Update()
-    Program.Delay(100)
-    If rawValueR[0] > 55 And rawValueR[2] > 45 Then
-        Speaker.Note(100,"C4",200) 'white
-        colDetected = "white"
-    ElseIf rawValueR[0] > 50 And rawValueR[2] < 10 Then
-        Speaker.Note(100,"D4",200) 'red
-        colDetected = "red"
-    ElseIf rawValueR[1] > 5 And rawValueR[0] < 10 Then
-        Speaker.Note(100,"E4",200) 'black
-        colDetected = "black"
-    Else 
-        colDetected = "none"
-    EndIf
-EndSub
-
 
 Sub pTrack 'before using this function, define baseSpeed
   error = lightVal[0] - thres
@@ -180,36 +157,5 @@ Motor.Stop("BC","True")
 Speaker.Tone(100,1000,1000) 'beep when line track function ends
 Program.Delay(1000)
 
-
-
-' While "True"
-'   gForward()
-'   diffRotation = Motor.GetCount("B") - startRotation
-'   LCD.StopUpdate()
-'   LCD.Clear()
-'   LCD.Text(1,1,1,2,diffRotation)
-'   LCD.Update()
-' EndWhile
-
-
-startRotation = Motor.GetCount("B")
-baseSpeed = 5
-targetAngle = 90 'as the startAngle is still -90 deg
-count = 0
-While startRotation - extra + 1275 > Motor.GetCount("B") 'if haven't hit wall yet
-  readCol()
-  If colDetected = "none" Then 'if nothing is detected
-    readVal()
-    gForward()  
-  Else 'if something is detected
-    readCol()
-    LCD.Text(1,0,count,2,"Object")
-    LCD.Update()
-    count = count + 20
-    Motor.MoveSync("BC",5,5,80,"True") 'move a bit after scanning
-    'extra = extra + 90 'theoretically should be 90 
-  EndIf
-EndWhile
-
-
-
+targetAngle = 89 'as the startAngle is still -90 deg
+pTurn()

@@ -1,14 +1,14 @@
 'sensor intialisation
 
-Sensor.SetMode(1, 4) 'left light sensor 
-Sensor.SetMode(2, 4)  'right light sensor
+Sensor.SetMode(2, 4) 'left light sensor 
+Sensor.SetMode(1, 4)  'right light sensor
 Sensor.SetMode(4, 4) 'line tracking sensor
 Sensor.SetMode(3, 0) 'gyro
 
 While "True"
   LCD.StopUpdate()
   LCD.Clear()
-  colors = Sensor.ReadRaw(2,3)
+  colors = Sensor.ReadRaw(1,3)
   LCD.Text(1,1,1,2,colors[0])
   LCD.Text(1,60,1,2,colors[1])
   LCD.Text(1,120,1,2,colors[2])

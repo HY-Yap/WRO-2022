@@ -1,0 +1,81 @@
+'RUN ONLY WHEN ON FULL BATTERY
+
+Sensor.SetMode(2, 4) 'left light sensor NXT - RGB
+Sensor.SetMode(1, 4)  'right light sensor NXT - RGB
+Sensor.SetMode(4, 4) 'line tracking sensor  - RGB
+Sensor.SetMode(3, 0) 'gyro
+
+
+'Variables to be initialised
+
+targetAngle = 0
+startAngle = 0
+
+thres = 275
+lastError = 0
+
+baseSpeed = 30
+
+extra = 0
+stopped = 0
+
+'##############################################################
+
+
+'Invert motors
+
+Motor.Invert("B") 'left motor
+'right motor is C, no need to invert
+
+'##############################################################
+
+
+'Functions
+
+Sub readVal
+  rawValue = Sensor.ReadRaw(4,3) 'read RGB values of the floor
+  rawValueL = Sensor.ReadRaw(2,3) 'read RGB values of left
+  rawValueR = Sensor.ReadRaw(1,3) 'read RGB values of right
+  lightVal[0] = rawValue[0] + rawValue[1] + rawValue[2] 'R+G+B of floor
+  lightVal[3] = rawValue[1] 'B of floor
+  lightVal[1] = rawValueL[0] + rawValueL[1] + rawValueL[2] 'R+G+B of left
+  lightVal[2] = rawValueR[0] + rawValueR[1] + rawValueR[2] 'R+G+B of right
+EndSub
+
+Sub readCol
+    LCD.StopUpdate()
+    LCD.Clear()
+    readVal()
+    LCD.Text(1,1,1,2,rawValueR[0]) 'R of right
+    LCD.Text(1,60,1,2,rawValueR[1]) 'G of right
+    LCD.Text(1,120,1,2,rawValueR[2]) 'B of right
+    LCD.Update()
+    Program.Delay(100)
+    If rawValueR[0] > 55 And rawValueR[2] > 45 Then
+        Speaker.Note(100,"C4",200) 'white
+        colDetected = "white"
+    ElseIf rawValueR[0] > 50 And rawValueR[2] < 10 Then
+        Speaker.Note(100,"D4",200) 'red
+        colDetected = "red"
+    ElseIf rawValueR[1] > 5 And rawValueR[0] < 10 Then
+        Speaker.Note(100,"E4",200) 'black
+        colDetected = "black"
+    Else 
+        colDetected = "none"
+    EndIf
+EndSub
+
+
+'##############################################################
+
+
+'Example Code
+
+While "True"
+    readCol()
+EndWhile
+
+'bg = 5/6 4 4/5
+'red = 58/59 15/16 6/7
+'black = 5/6 6/7 5/6
+'white = 61/62 58 48/49

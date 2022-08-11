@@ -1,6 +1,6 @@
 
-Sensor.SetMode(1, 4) 'left light sensor NXT - RGB
-Sensor.SetMode(2, 4)  'right light sensor NXT - RGB
+Sensor.SetMode(2, 4) 'left light sensor NXT - RGB
+Sensor.SetMode(1, 4)  'right light sensor NXT - RGB
 Sensor.SetMode(4, 4) 'line tracking sensor  - RGB
 Sensor.SetMode(3, 0) 'gyro
 

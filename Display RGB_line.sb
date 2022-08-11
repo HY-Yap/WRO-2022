@@ -1,7 +1,7 @@
 'sensor intialisation
 
-Sensor.SetMode(1, 4) 'left light sensor 
-Sensor.SetMode(2, 4)  'right light sensor
+Sensor.SetMode(2, 4) 'left light sensor 
+Sensor.SetMode(1, 4)  'right light sensor
 Sensor.SetMode(4, 4) 'line tracking sensor
 Sensor.SetMode(3, 0) 'gyro
 
