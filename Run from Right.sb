@@ -114,13 +114,13 @@ Sub readCol
     LCD.Text(1,120,1,2,rawValueR[2]) 'B of right
     LCD.Update()
     Program.Delay(100)
-    If rawValueR[0] > 55 And rawValueR[2] > 45 Then
+    If rawValueR[0] > 20 And rawValueR[2] > 20 Then
         Speaker.Note(100,"C4",200) 'white
         colDetected = "white"
-    ElseIf rawValueR[0] > 50 And rawValueR[2] < 10 Then
+    ElseIf rawValueR[0] > 30 And rawValueR[3] < 10 Then
         Speaker.Note(100,"D4",200) 'red
         colDetected = "red"
-    ElseIf rawValueR[1] > 5 And rawValueR[0] < 10 Then
+    ElseIf (rawValueR[1] > 4 And rawValueR[2] <= 3) Then
         Speaker.Note(100,"E4",200) 'black
         colDetected = "black"
     Else 
@@ -143,34 +143,42 @@ EndSub
 
 'Code
 
-' Program.Delay(1000)
-' Motor.MoveSync("BC",95,100,1080,"True") 'move forward 3 rotations
+Program.Delay(1000)
+startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
+Motor.MoveSync("BC",100,95,1080,"True") 'move forward 3 rotations
 
 LCD.Clear()
 readVal()
 While lightVal[0] > 90
- Motor.StartSync("BC",50,40)
+ Motor.StartSync("BC",40,60)
  readVal()
 EndWhile
 Motor.Stop("BC","True") 'stop when a black horizontal line is detected
 
-Motor.MoveSync("BC",-30,30,200,"True") 'rotate
-Motor.Start("BC",-80) 'wall bang
+Motor.MoveSync("BC",-10,50,260,"False")
+' targetAngle = -90
+' pTurn()
+Motor.Start("BC",-20) 'wall bang
 Program.Delay(1000) 'pause
 Motor.Stop("BC","True") 'stop
 
+'move forward a bit
+Motor.MoveSync("BC",20,20,20,"True")
+
+Motor.Start("BC",-5) 'wall bang 2
+Program.Delay(1000)
+Motor.Stop("BC","True")
 
 startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
 Speaker.Tone(100,1000,500)
 Program.Delay(500)
-Motor.MoveSync("BC",100,100,20,"True")
-targetAngle = 65
-LpTurn() 'turn 65 degrees
+targetAngle = 80
+LpTurn() 'turn 80 degrees
 Speaker.Tone(100,1000,1000)
 Program.Delay(1000)
 
 
-baseSpeed = 15
+baseSpeed = 20
 readVal()
 While (lightVal[0] < 122 Or lightVal[0] > 133) And (lightVal[3] < 50 Or lightVal[3] > 60) 'line track until senses blue 
   readVal()
@@ -192,11 +200,13 @@ Program.Delay(1000)
 ' EndWhile
 
 
+' Motor.Move("B",10,60,"False")
+
 startRotation = Motor.GetCount("B")
-baseSpeed = 5
-targetAngle = 90 'as the startAngle is still -90 deg
+baseSpeed = 10
+targetAngle = 88  'as the startAngle is still -90 deg
 count = 0
-While startRotation - extra + 1275 > Motor.GetCount("B") 'if haven't hit wall yet
+While startRotation - extra + 1270 > Motor.GetCount("B") 'if haven't hit wall yet
   readCol()
   If colDetected = "none" Then 'if nothing is detected
     readVal()

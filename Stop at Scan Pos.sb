@@ -120,19 +120,21 @@ EndSub
 
 'Code
 
-' Program.Delay(1000)
-' Motor.MoveSync("BC",95,100,1080,"True") 'move forward 3 rotations
+Program.Delay(1000)
+startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
+Motor.MoveSync("BC",100,99,1080,"True") 'move forward 3 rotations
 
 LCD.Clear()
 readVal()
 While lightVal[0] > 90
- Motor.StartSync("BC",50,40)
+ Motor.StartSync("BC",40,60)
  readVal()
 EndWhile
 Motor.Stop("BC","True") 'stop when a black horizontal line is detected
 
-Motor.MoveSync("BC",-30,30,200,"True") 'rotate
-Motor.Start("BC",-80) 'wall bang
+targetAngle = -90
+pTurn()
+Motor.Start("BC",-40) 'wall bang
 Program.Delay(1000) 'pause
 Motor.Stop("BC","True") 'stop
 
@@ -140,14 +142,14 @@ Motor.Stop("BC","True") 'stop
 startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
 Speaker.Tone(100,1000,500)
 Program.Delay(500)
-Motor.MoveSync("BC",100,100,20,"True")
-targetAngle = 65
-LpTurn() 'turn 65 degrees
+Motor.MoveSync("BC",100,100,20,"True") 'move forward a bit
+targetAngle = 80
+LpTurn() 'turn 80 degrees
 Speaker.Tone(100,1000,1000)
 Program.Delay(1000)
 
 
-baseSpeed = 15
+baseSpeed = 10
 readVal()
 While (lightVal[0] < 122 Or lightVal[0] > 133) And (lightVal[3] < 50 Or lightVal[3] > 60) 'line track until senses blue 
   readVal()

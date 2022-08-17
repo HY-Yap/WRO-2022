@@ -51,19 +51,20 @@ Sub readCol
     LCD.Text(1,120,1,2,rawValueR[2]) 'B of right
     LCD.Update()
     Program.Delay(100)
-    If rawValueR[0] > 55 And rawValueR[2] > 45 Then
+    If rawValueR[0] > 18 And rawValueR[2] > 18 Then
         Speaker.Note(100,"C4",200) 'white
         colDetected = "white"
-    ElseIf rawValueR[0] > 50 And rawValueR[2] < 10 Then
+    ElseIf rawValueR[0] > 30 And rawValueR[3] < 20 Then
         Speaker.Note(100,"D4",200) 'red
         colDetected = "red"
-    ElseIf rawValueR[1] > 5 And rawValueR[0] < 10 Then
+    ElseIf (rawValueR[1] > 4 And rawValueR[2] <= 3) Then
         Speaker.Note(100,"E4",200) 'black
         colDetected = "black"
     Else 
         colDetected = "none"
     EndIf
 EndSub
+
 
 
 '##############################################################
@@ -79,3 +80,9 @@ EndWhile
 'red = 58/59 15/16 6/7
 'black = 5/6 6/7 5/6
 'white = 61/62 58 48/49
+
+
+'bg -- 4  3/4  4
+'red -- 35  11/12  4
+'black -- 4  5  4
+'white -- 32 2 8/29  25/26
