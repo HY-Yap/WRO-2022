@@ -36,33 +36,101 @@ Sub readVal
   rawValue = Sensor.ReadRaw(4,3) 'read RGB values of the floor
   rawValueL = Sensor.ReadRaw(2,3) 'read RGB values of left
   rawValueR = Sensor.ReadRaw(1,3) 'read RGB values of right
-  lightVal[0] = rawValue[0] + rawValue[1] + rawValue[2] 'R+G+B of floor
-  lightVal[3] = rawValue[1] 'B of floor
-  lightVal[1] = rawValueL[0] + rawValueL[1] + rawValueL[2] 'R+G+B of left
-  lightVal[2] = rawValueR[0] + rawValueR[1] + rawValueR[2] 'R+G+B of right
+  lightVal[0] = rawValue[0] + rawValue[1] + rawValue[2]
+  lightVal[3] = rawValue[1]
+  lightVal[1] = rawValueL[0] + rawValueL[1] + rawValueL[2]
+  lightVal[2] = rawValueR[0] + rawValueR[1] + rawValueR[2]
+  If (rawValue[0] + rawValue[1] + rawValue[2]) <> 0 Then
+    R_floor = ( rawValue[0] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+    G_floor = ( rawValue[1] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+    B_floor = ( rawValue[2] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+  Else
+    R_floor = 0
+    G_floor = 0
+    B_floor = 0
+  EndIf
+  If (rawValueL[0] + rawValueL[1] + rawValueL[2]) <> 0 Then
+    R_left = ( rawValueL[0] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+    G_left = ( rawValueL[1] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+    B_left = ( rawValueL[2] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+  Else
+    R_left = 0
+    G_left = 0
+    B_left = 0
+  EndIf
+  If (rawValueR[0] + rawValueR[1] + rawValueR[2]) <> 0 Then
+    R_right = ( rawValueR[0] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+    G_right = ( rawValueR[1] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+    B_right = ( rawValueR[2] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+  Else
+    R_right = 0
+    G_right = 0
+    B_right = 0
+    EndIf
 EndSub
 
-Sub readCol
-    LCD.StopUpdate()
-    LCD.Clear()
+' Sub readCol
+'     LCD.StopUpdate()
+'     LCD.Clear()
+'     readVal()
+'     LCD.Text(1,1,1,2,rawValueR[0]) 'R of right
+'     LCD.Text(1,60,1,2,rawValueR[1]) 'G of right
+'     LCD.Text(1,120,1,2,rawValueR[2]) 'B of right
+'     LCD.Update()
+'     Program.Delay(100)
+'     If rawValueR[0] > 15 And rawValueR[2] > 20 Then
+'         Speaker.Note(100,"C4",200) 'white
+'         colDetected = "white"
+'     ElseIf (rawValueR[0] > 20 And rawValueR[2] < 10) Then
+'         Speaker.Note(100,"D4",200) 'red
+'         colDetected = "red"
+'     ElseIf rawValueR[0] <= 4 And rawValueR[1] >= 5 And rawValueR[1] < 15 Then
+'         Speaker.Note(100,"E4",200) 'black
+'         colDetected = "black"
+'     Else 
+'         colDetected = "none"
+'     EndIf
+' EndSub
+
+Sub readCol_right
     readVal()
-    LCD.Text(1,1,1,2,rawValueR[0]) 'R of right
-    LCD.Text(1,60,1,2,rawValueR[1]) 'G of right
-    LCD.Text(1,120,1,2,rawValueR[2]) 'B of right
-    LCD.Update()
-    Program.Delay(100)
-    If rawValueR[0] > 18 And rawValueR[2] > 18 Then
-        Speaker.Note(100,"C4",200) 'white
-        colDetected = "white"
-    ElseIf rawValueR[0] > 30 And rawValueR[3] < 20 Then
-        Speaker.Note(100,"D4",200) 'red
+    If R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
+        If rawValueR[0] > 10 And rawValue[1] > 10 And rawValue[2] > 10 Then
+          Speaker.Note(50,"C4",200) 'white
+          colDetected = "white"
+        Else 
+          Speaker.Note(50,"F4",200)
+          colDetected = "none"
+        EndIf
+    ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 and B_right > 5 and B_right < 16 Then
+        Speaker.Note(50,"D4",200) 'red
         colDetected = "red"
-    ElseIf (rawValueR[1] > 4 And rawValueR[2] <= 3) Then
-        Speaker.Note(100,"E4",200) 'black
+    ElseIf R_right > 10 And R_right < 38 And G_right > 35 And G_right < 61 And B_right > 22 And B_right < 40 Then
+        Speaker.Note(50,"E4",200) 'black
         colDetected = "black"
     Else 
+        Speaker.Note(50,"F4",200)
         colDetected = "none"
     EndIf
+    Program.Delay(100)
+EndSub
+
+Sub readCol_left
+    readVal()
+    If R_left > 65 And R_left < 81 And G_left > 10 And G_left < 31 and B_left > 5 and B_left < 16 Then
+        Speaker.Note(50,"D4",200) 'red
+        colDetected = "red"
+    ElseIf rawValueL[0] > -1 And rawValueL[0] < 21 And rawValueL[2] > -1 And rawValueL[2] < 21 Then
+        Speaker.Note(50,"E4",200) 'black
+        colDetected = "black"
+    ElseIf (R_left = 0 Or R_left = (100/3) Or R_left = 100 Or R_left = 60 Or R_left = 50 Or (rawValueL[0] > -1 And rawValueL[0] < 4) ) And (G_left = 0 Or G_left = (100/3) Or G_left = 100 Or G_left = 60 Or G_left = 50 Or (rawValueL[1] > -1 And rawValueL[1] < 4) ) And (B_left = 0 Or B_left = (100/3) Or B_left = 100 Or B_left = 60 Or B_left = 50 Or (rawValueL[2] > -1 And rawValueL[2] < 4) ) Then
+        Speaker.Note(50,"F4",200) 'nothing
+        colDetected = "none"
+    Else 
+        Speaker.Note(50,"C4",200) 'white
+        colDetected = "white"
+    EndIf
+    Program.Delay(100)
 EndSub
 
 
@@ -73,8 +141,23 @@ EndSub
 'Example Code
 
 While "True"
-    readCol()
+    readCol_right()
 EndWhile
+
+'RGB PERCENTAGE RIGHT
+'bg -- 30-40 , 25-35 , 30-40
+'red -- 65-80 , 10-30 , 5-15
+'black -- 10-35 , 40-48 , 25-40
+'white -- 36-38 , 31-35 , 26-32
+
+'RGB PERCENTAGE LEFT
+'bg -- 0 / 33.333 , 0 / 33.333 , 0 / 33.333
+'red -- 65-80 , 10-30 , 5-15
+
+'RGB RAW LEFT
+'black -- 0-20, 0-26 , 0-20
+'white -- 20-300 , 20-260 , 20-150
+
 
 'bg = 5/6 4 4/5
 'red = 58/59 15/16 6/7
@@ -86,3 +169,5 @@ EndWhile
 'red -- 35  11/12  4
 'black -- 4  5  4
 'white -- 32 2 8/29  25/26
+
+

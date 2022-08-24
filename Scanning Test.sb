@@ -132,15 +132,21 @@ Sub readVal
     EndIf
 EndSub
 
+
 Sub readCol_right
     readVal()
     If R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
-        Speaker.Note(50,"C4",200) 'white
-        colDetected = "white"
+        If rawValueR[0] > 10 And rawValue[1] > 10 And rawValue[2] > 10 Then
+          Speaker.Note(50,"C4",200) 'white
+          colDetected = "white"
+        Else 
+          Speaker.Note(50,"F4",200)
+          colDetected = "none"
+        EndIf
     ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 and B_right > 5 and B_right < 16 Then
         Speaker.Note(50,"D4",200) 'red
         colDetected = "red"
-    ElseIf R_right > 16 And R_right < 38 And G_right > 35 And G_right < 60 And B_right > 22 And B_right < 34 Then
+    ElseIf R_right > 10 And R_right < 38 And G_right > 35 And G_right < 61 And B_right > 22 And B_right < 40 Then
         Speaker.Note(50,"E4",200) 'black
         colDetected = "black"
     Else 
@@ -183,83 +189,57 @@ EndSub
 
 'Code
 
-Program.Delay(1000)
-startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
-Motor.MoveSync("BC",100,95,1080,"True") 'move forward 3 rotations
-
-LCD.Clear()
-readVal()
-While lightVal[0] > 90
- Motor.StartSync("BC",40,60)
- readVal()
-EndWhile
-Motor.Stop("BC","True") 'stop when a black horizontal line is detected
-
-Motor.MoveSync("BC",-10,50,260,"False")
-' targetAngle = -90
-' pTurn()
-Motor.Start("BC",-20) 'wall bang
-Program.Delay(1000) 'pause
-Motor.Stop("BC","True") 'stop
-
-'move forward a bit
-Motor.MoveSync("BC",20,20,20,"True")
-
-Motor.Start("BC",-5) 'wall bang 2
-Program.Delay(1000)
-Motor.Stop("BC","True")
-
-startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
-Speaker.Tone(100,1000,500)
-Program.Delay(500)
-targetAngle = 80
-LpTurn() 'turn 80 degrees
-Speaker.Tone(100,1000,1000)
-Program.Delay(1000)
-
-
-baseSpeed = 20
-readVal()
-While (lightVal[0] < 122 Or lightVal[0] > 133) And (lightVal[3] < 50 Or lightVal[3] > 60) 'line track until senses blue 
-  readVal()
-  pTrack()
-EndWhile
-Motor.Stop("BC","True")
-Speaker.Tone(100,1000,1000) 'beep when line track function ends
-Program.Delay(1000)
-
-
-
-' While "True"
-'   gForward()
-'   diffRotation = Motor.GetCount("B") - startRotation
-'   LCD.StopUpdate()
-'   LCD.Clear()
-'   LCD.Text(1,1,1,2,diffRotation)
-'   LCD.Update()
-' EndWhile
-
-
-' Motor.Move("B",10,60,"False")
-
 startRotation = Motor.GetCount("B")
-baseSpeed = 12
-targetAngle = 88  'as the startAngle is still -90 deg
+baseSpeed = 20
+startAngle = Sensor.ReadRawValue(3,0) 'startAngle = gyro value
+targetAngle = startAngle
 count = 0
-While startRotation - extra + 1270 > Motor.GetCount("B") 'if haven't hit wall yet
-  readCol()
-  If colDetected = "none" Then 'if nothing is detected
-    readVal()
-    gForward()  
-  Else 'if something is detected
-    readCol()
-    LCD.Text(1,0,count,2,"Object")
-    LCD.Update()
-    count = count + 20
-    Motor.MoveSync("BC",5,5,80,"True") 'move a bit after scanning
-    'extra = extra + 90 'theoretically should be 90 
-  EndIf
+diffRotation = Motor.GetCount("B") - startRotation
+
+While diffRotation < 320 'gForward until reaches the twelveth box
+  gForward()
+  diffRotation = Motor.GetCount("B") - startRotation
+  LCD.StopUpdate()
+  LCD.Clear()
+  LCD.Text(1,1,1,2,diffRotation)
+  LCD.Update()
 EndWhile
+Motor.Stop("BC","True")
+readCol_right() 'detect what's there
+LCD.Text(1,0,21,2,colDetected) 'display what's on box 12
 
+While diffRotation < 480 'gForward until reaches the thirteenth box
+  gForward()
+  diffRotation = Motor.GetCount("B") - startRotation
+  LCD.StopUpdate()
+  LCD.Clear()
+  LCD.Text(1,1,1,2,diffRotation)
+  LCD.Update()
+EndWhile
+Motor.Stop("BC","True")
+readCol_right() 'detect what's there
+LCD.Text(1,0,21,2,colDetected) 'display what's on box 13
+Program.Delay(1000)
 
+While diffRotation < 1010 'gForward until reaches the fourteenth box
+  gForward()
+  diffRotation = Motor.GetCount("B") - startRotation
+  LCD.StopUpdate()
+  LCD.Clear()
+  LCD.Text(1,1,1,2,diffRotation)
+  LCD.Update()
+EndWhile
+Motor.Stop("BC","True")
+readCol_right() 'detect what's there
+LCD.Text(1,0,21,2,colDetected) 'display what's on box 14
+Program.Delay(1000)
 
+While diffRotation < 1900 'gForward until reaches the safe zone
+  gForward()
+  diffRotation = Motor.GetCount("B") - startRotation
+  LCD.StopUpdate()
+  LCD.Clear()
+  LCD.Text(1,1,1,2,diffRotation)
+  LCD.Update()
+EndWhile
+Motor.Stop("BC","True")

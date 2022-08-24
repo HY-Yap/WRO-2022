@@ -55,7 +55,7 @@ EndSub
 
 'Example Code
 
-baseSpeed = 20
+baseSpeed = 22
 targetAngle = 0
 startAngle = Sensor.ReadRawValue(3,0)
 While "True"

@@ -84,10 +84,37 @@ Sub readVal
   rawValueL = Sensor.ReadRaw(2,3) 'read RGB values of left
   rawValueR = Sensor.ReadRaw(1,3) 'read RGB values of right
   lightVal[0] = rawValue[0] + rawValue[1] + rawValue[2]
+  lightVal[3] = rawValue[1]
   lightVal[1] = rawValueL[0] + rawValueL[1] + rawValueL[2]
   lightVal[2] = rawValueR[0] + rawValueR[1] + rawValueR[2]
+  If (rawValue[0] + rawValue[1] + rawValue[2]) <> 0 Then
+    R_floor = ( rawValue[0] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+    G_floor = ( rawValue[1] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+    B_floor = ( rawValue[2] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+  Else
+    R_floor = 0
+    G_floor = 0
+    B_floor = 0
+  EndIf
+  If (rawValueL[0] + rawValueL[1] + rawValueL[2]) <> 0 Then
+    R_left = ( rawValueL[0] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+    G_left = ( rawValueL[1] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+    B_left = ( rawValueL[2] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+  Else
+    R_left = 0
+    G_left = 0
+    B_left = 0
+  EndIf
+  If (rawValueR[0] + rawValueR[1] + rawValueR[2]) <> 0 Then
+    R_right = ( rawValueR[0] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+    G_right = ( rawValueR[1] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+    B_right = ( rawValueR[2] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+  Else
+    R_right = 0
+    G_right = 0
+    B_right = 0
+    EndIf
 EndSub
-
 
 Sub pTrack
   error = lightVal[0] - thres
