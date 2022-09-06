@@ -1,4 +1,5 @@
 'RUN ONLY WHEN ON FULL BATTERY
+'RESET GYRO BEFORE EACH RUN
 
 Sensor.SetMode(2, 4) 'left light sensor NXT - RGB
 Sensor.SetMode(1, 4)  'right light sensor NXT - RGB
@@ -7,6 +8,12 @@ Sensor.SetMode(3, 0) 'gyro
 
 
 'Variables to be initialised
+
+minSpeed = 0
+maxSpeed = 0
+
+startMotor = 0
+endMotor = 0
 
 targetAngle = 0
 startAngle = 0
@@ -18,6 +25,20 @@ baseSpeed = 30
 
 extra = 0
 stopped = 0
+
+markBlue = 0
+markGreen = 0
+markYellow = 0
+markRed = 0
+markBrown = 0
+markWhite = 0
+
+white = 0
+black = 0
+red = 0
+none = 0
+
+chemPos = 0
 
 '##############################################################
 
@@ -132,46 +153,160 @@ Sub readVal
     EndIf
 EndSub
 
+Sub gFwd
+    startMotor = (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2
+    accelEnd = 40 'accels in 80
+    minSpeed = 10
+    maxSpeed = 40
+    integral = 0
+    lastError = 0
+    While (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < endMotor + startMotor
+        gError()
+        integral = error + integral
+        derivative = error - lastError
+        lastError = error
+        speed =  (error * 0.5) + (derivative * 0.5) 'correction to 0 deg
+        If (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < startMotor + accelEnd Then 
+            baseSpeed = Math.Power((Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2/(startMotor + accelEnd),2)*(maxSpeed-minSpeed)+minSpeed
+            speed =  (error * 0.5) + (derivative * 0.5)
+            Motor.StartSync("BC",baseSpeed+speed,baseSpeed-speed) 'accelerate            
+        ElseIf (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 >= startMotor + accelEnd And (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < (startMotor + endMotor) Then
+            If (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < endMotor - accelEnd Then
+                speed =  (error * 0.5) + (derivative * 0.5)
+                Motor.StartSync("BC",maxSpeed+speed,maxSpeed-speed) 'move at max speed
+            ElseIf (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 >= endMotor - accelEnd + startMotor Then
+                baseSpeed = Math.Power((Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2/(startMotor + accelEnd),2)*(maxSpeed-minSpeed)+minSpeed
+                speed =  (error * 0.5) + (derivative * 0.5)
+                Motor.StartSync("BC",baseSpeed + speed,baseSpeed - speed) 'deccelerate
+            EndIf
+        EndIf
 
-Sub readCol_right
-    readVal()
-    If R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
-        If rawValueR[0] > 10 And rawValue[1] > 10 And rawValue[2] > 10 Then
-          Speaker.Note(50,"C4",200) 'white
-          colDetected = "white"
+        readVal()
+        If R_right > 20 And R_right < 46 And G_right > 20 And G_right < 55 And B_right > 10 And B_right < 41 And rawValueR[0] < 10 And rawValueR[1] < 10 And rawValueR[2] <10 Then
+          colDetected = "none"
+        ElseIf R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
+          If (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))-startMotor > 0 And (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))-startMotor < 600 Then
+            Speaker.Note(50,"G4",200) 'white
+            markWhite = 1
+          Else
+            
+          EndIf        
+          colDetected = "white" 
+        ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 And B_right > 5 And B_right < 16 Then
+          Speaker.Note(50,"D4",200) 'red
+          colDetected = "red"
+        ElseIf R_right > 20 And R_right < 35 And G_right > 25 And G_right < 55 And B_right > 22 And B_right < 41 Then
+          Speaker.Note(50,"E4",200) 'black
+          colDetected = "black" 
         Else 
-          Speaker.Note(50,"F4",200)
           colDetected = "none"
         EndIf
-    ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 and B_right > 5 and B_right < 16 Then
-        Speaker.Note(50,"D4",200) 'red
-        colDetected = "red"
-    ElseIf R_right > 10 And R_right < 38 And G_right > 35 And G_right < 61 And B_right > 22 And B_right < 40 Then
-        Speaker.Note(50,"E4",200) 'black
-        colDetected = "black"
-    Else 
-        Speaker.Note(50,"F4",200)
-        colDetected = "none"
-    EndIf
-    Program.Delay(100)
+    EndWhile
+    Motor.Stop("BC","True")
+EndSub
+
+
+Sub liftChem
+  chemStartRot = Motor.GetCount("B")
+  If chemPos = 0 Then
+    targetAngle = targetAngle + 50
+    RpTurn()
+    Motor.Move("A",100,130,"True") 'lower claw
+    Motor.MoveSync("BC",20,20,130,"True") 'approach chemical
+    Motor.Move("A",-10,95,"True") 'pick up chemical
+    Motor.MoveSync("BC",-20,-20,130,"True") 'move back
+    targetAngle = targetAngle - 50
+    RpTurn()
+    Motor.Stop("BC","True")
+  ElseIf chemPos = 1 Then
+    targetAngle = targetAngle -50
+    LpTurn()
+    Motor.Move("A",100,130,"True") 'lower claw
+    Motor.MoveSync("BC",20,20,130,"True") 'approach chemical
+    Motor.Move("A",-10,95,"True") 'pick up chemical
+    Motor.MoveSync("BC",-20,-20,130,"True") 'move back
+    targetAngle = targetAngle + 50
+    LpTurn()
+    Motor.Stop("BC","True")
+  EndIf
+  Extra = Extra + (chemStartRot - Motor.GetCount("B"))
+EndSub
+
+
+Sub readCol_right
+  Program.Delay(1000)
+  colDetected = "e"
+  white = 0
+  red = 0
+  black = 0
+  none = 0
+  For i = 1 To 15
+      readVal()
+      If R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
+          ' If rawValueR[0] > 10 And rawValue[1] > 10 And rawValue[2] > 10 Then
+            white = white + 1
+          ' Else 
+          '   none = none + 1
+          ' EndIf
+      ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 And B_right > 5 And B_right < 16 Then
+          red = red + 1
+      ElseIf R_right > 10 And R_right < 38 And G_right > 35 And G_right < 61 And B_right > 22 And B_right < 40 Then
+          black = black + 1
+      Else 
+          none = none + 1
+      EndIf
+      Program.Delay(10)
+  EndFor
+  If white > none And white > red And white > black Then
+    Speaker.Note(50,"C4",200) 'white
+    colDetected = "white"
+  ElseIf red > white And red > black And red > none Then
+    Speaker.Note(50,"D4",200) 'red
+    colDetected = "red"
+  ElseIf black > white And black > red And black > none Then
+    Speaker.Note(50,"E4",200) 'black
+    colDetected = "black"
+    liftChem()
+  Else
+    Speaker.Note(50,"F4",200) 'none
+    colDetected = "none"
+  EndIf
 EndSub
 
 Sub readCol_left
+  Program.Delay(1000)
+  colDetected = "e"
+  white = 0
+  red = 0
+  black = 0
+  none = 0
+  For i = 1 To 15
     readVal()
-    If R_left > 35 And R_left < 40 And G_left > 31 And G_left < 37 And B_left > 25 And B_left < 33 Then
-        Speaker.Note(50,"C4",200) 'white
-        colDetected = "white"
-    ElseIf R_left > 65 And R_left < 81 And G_left > 10 And G_left < 31 and B_left > 5 and B_left < 16 Then
-        Speaker.Note(50,"D4",200) 'red
-        colDetected = "red"
-    ElseIf R_left > 16 And R_left < 38 And G_left > 35 And G_left < 60 And B_left > 22 And B_left < 34 Then
-        Speaker.Note(50,"E4",200) 'black
-        colDetected = "black"
+    If R_left > 65 And R_left < 81 And G_left > 10 And G_left < 31 and B_left > -1 and B_left < 16 Then
+      red = red + 1
+    ElseIf R_left > -1 And R_left < 40 And G_left > 31 And G_left < 80 And rawValueL[2] < 10 Then
+      black = black + 1
+    ElseIf (R_left = 0 Or R_left = (100/3) Or R_left = 100 Or R_left = 60 Or R_left = 50 Or (rawValueL[0] > -1 And rawValueL[0] < 4) ) And (G_left = 0 Or G_left = (100/3) Or G_left = 100 Or G_left = 60 Or G_left = 50 Or (rawValueL[1] > -1 And rawValueL[1] < 4) ) And (B_left = 0 Or B_left = (100/3) Or B_left = 100 Or B_left = 60 Or B_left = 50 Or (rawValueL[2] > -1 And rawValueL[2] < 4) ) Then
+      none = none + 1
     Else 
-        Speaker.Note(50,"F4",200)
-        colDetected = "none"
+      white = white + 1
     EndIf
-    Program.Delay(100)
+    Program.Delay(10)
+  EndFor
+  If white > none And white > red And white > black Then
+    Speaker.Note(50,"C4",200) 'white
+    colDetected = "white"
+  ElseIf red > white And red > black And red > none Then
+    Speaker.Note(50,"D4",200) 'red
+    colDetected = "red"
+  ElseIf black > white And black > red And black > none Then
+    Speaker.Note(50,"E4",200) 'black
+    colDetected = "black"
+    liftChem()
+  Else
+    Speaker.Note(50,"F4",200) 'none
+    colDetected = "none"
+  EndIf
 EndSub
 
 
@@ -189,57 +324,64 @@ EndSub
 
 'Code
 
-startRotation = Motor.GetCount("B")
-baseSpeed = 20
-startAngle = Sensor.ReadRawValue(3,0) 'startAngle = gyro value
+Program.Delay(1000)
+
+startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
 targetAngle = startAngle
-count = 0
-diffRotation = Motor.GetCount("B") - startRotation
-
-While diffRotation < 320 'gForward until reaches the twelveth box
+baseSpeed = -50
+While -1400 < Motor.GetCount("B")
   gForward()
-  diffRotation = Motor.GetCount("B") - startRotation
-  LCD.StopUpdate()
-  LCD.Clear()
-  LCD.Text(1,1,1,2,diffRotation)
-  LCD.Update()
 EndWhile
 Motor.Stop("BC","True")
-readCol_right() 'detect what's there
-LCD.Text(1,0,21,2,colDetected) 'display what's on box 12
 
-While diffRotation < 480 'gForward until reaches the thirteenth box
+LCD.Clear()
+readVal()
+baseSpeed = -20
+While lightVal[0] > 90
+' Motor.StartSync("BC",-25,-30)
   gForward()
-  diffRotation = Motor.GetCount("B") - startRotation
-  LCD.StopUpdate()
-  LCD.Clear()
-  LCD.Text(1,1,1,2,diffRotation)
-  LCD.Update()
+ readVal()
 EndWhile
+Motor.Stop("BC","True") 'stop when a black horizontal line is detected
+' Program.Delay(500)
+' Motor.Move("BC",10,80,"True")
 Motor.Stop("BC","True")
-readCol_right() 'detect what's there
-LCD.Text(1,0,21,2,colDetected) 'display what's on box 13
+Program.Delay(500)
+
+' Motor.MoveSync("BC",-10,50,260,"False")
+targetAngle = 90
+pTurn()
+Motor.Start("BC",-20) 'wall bang
+Program.Delay(800) 'pause
+Motor.Stop("BC","True") 'stop
+
+' 'move forward a bit
+' Motor.MoveSync("BC",20,20,20,"True")
+
+' Motor.Start("BC",-5) 'wall bang 2
+' Program.Delay(1000)
+' Motor.Stop("BC","True")
+
+startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
+Speaker.Tone(100,1000,500)
+Program.Delay(500)
+targetAngle = 85
+LpTurn() 'turn 85 degrees
+Speaker.Tone(100,1000,1000)
 Program.Delay(1000)
 
-While diffRotation < 1010 'gForward until reaches the fourteenth box
-  gForward()
-  diffRotation = Motor.GetCount("B") - startRotation
-  LCD.StopUpdate()
-  LCD.Clear()
-  LCD.Text(1,1,1,2,diffRotation)
-  LCD.Update()
+
+baseSpeed = 20
+readVal()
+While (lightVal[0] < 122 Or lightVal[0] > 133) And (lightVal[3] < 50 Or lightVal[3] > 60) 'line track until senses blue 
+  readVal()
+  pTrack()
 EndWhile
 Motor.Stop("BC","True")
-readCol_right() 'detect what's there
-LCD.Text(1,0,21,2,colDetected) 'display what's on box 14
+Speaker.Tone(100,1000,1000) 'beep when line track function ends
 Program.Delay(1000)
 
-While diffRotation < 1900 'gForward until reaches the safe zone
-  gForward()
-  diffRotation = Motor.GetCount("B") - startRotation
-  LCD.StopUpdate()
-  LCD.Clear()
-  LCD.Text(1,1,1,2,diffRotation)
-  LCD.Update()
-EndWhile
-Motor.Stop("BC","True")
+
+targetAngle = 90
+endMotor = 1280
+gFwd()

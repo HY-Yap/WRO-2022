@@ -1,0 +1,20 @@
+'sensor intialisation
+
+Sensor.SetMode(2, 4) 'left light sensor 
+Sensor.SetMode(1, 4)  'right light sensor
+Sensor.SetMode(4, 4) 'line tracking sensor
+Sensor.SetMode(3, 0) 'gyro
+
+Sub readRFI
+    Sensor.SetMode(1, 0) 'shift to RFI
+    RFI_right = Sensor.ReadPercent(1)
+EndSub
+
+While "True"
+  readRFI()
+  LCD.StopUpdate()
+  LCD.Clear()
+  LCD.Text(1,1,1,2,RFI_right)
+  LCD.Update()
+  Program.Delay(100)
+EndWhile

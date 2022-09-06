@@ -69,50 +69,40 @@ Sub readVal
     EndIf
 EndSub
 
-' Sub readCol
-'     LCD.StopUpdate()
-'     LCD.Clear()
+
+' Sub readCol_right
 '     readVal()
-'     LCD.Text(1,1,1,2,rawValueR[0]) 'R of right
-'     LCD.Text(1,60,1,2,rawValueR[1]) 'G of right
-'     LCD.Text(1,120,1,2,rawValueR[2]) 'B of right
-'     LCD.Update()
-'     Program.Delay(100)
-'     If rawValueR[0] > 15 And rawValueR[2] > 20 Then
-'         Speaker.Note(100,"C4",200) 'white
+'     If R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
+'         Speaker.Note(50,"C4",200) 'white
 '         colDetected = "white"
-'     ElseIf (rawValueR[0] > 20 And rawValueR[2] < 10) Then
-'         Speaker.Note(100,"D4",200) 'red
+'     ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 And B_right > 5 And B_right < 16 Then
+'         Speaker.Note(50,"D4",200) 'red
 '         colDetected = "red"
-'     ElseIf rawValueR[0] <= 4 And rawValueR[1] >= 5 And rawValueR[1] < 15 Then
-'         Speaker.Note(100,"E4",200) 'black
+'     ElseIf R_right > 10 And R_right < 38 And G_right > 35 And G_right < 61 And B_right > 22 And B_right < 40 Then
+'         Speaker.Note(50,"E4",200) 'black
 '         colDetected = "black"
 '     Else 
 '         colDetected = "none"
 '     EndIf
+'     Program.Delay(100)
 ' EndSub
 
 Sub readCol_right
     readVal()
-    If R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
-        If rawValueR[0] > 10 And rawValue[1] > 10 And rawValue[2] > 10 Then
-          Speaker.Note(50,"C4",200) 'white
-          colDetected = "white"
-        Else 
-          Speaker.Note(50,"F4",200)
-          colDetected = "none"
-        EndIf
-    ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 and B_right > 5 and B_right < 16 Then
-        Speaker.Note(50,"D4",200) 'red
-        colDetected = "red"
-    ElseIf R_right > 10 And R_right < 38 And G_right > 35 And G_right < 61 And B_right > 22 And B_right < 40 Then
-        Speaker.Note(50,"E4",200) 'black
-        colDetected = "black"
+    If R_right > 20 And R_right < 46 And G_right > 20 And G_right < 55 And B_right > 10 And B_right < 41 And rawValueR[0] < 10 And rawValueR[1] < 10 And rawValueR[2] <10 Then
+      colDetected = "none"
+    ElseIf R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
+      Speaker.Note(50,"C4",200) 'white
+      colDetected = "white" 
+    ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 And B_right > 5 And B_right < 16 Then
+      Speaker.Note(50,"D4",200) 'red
+      colDetected = "red"
+    ElseIf R_right > 20 And R_right < 35 And G_right > 25 And G_right < 55 And B_right > 22 And B_right < 41 Then
+      Speaker.Note(50,"E4",200) 'black
+      colDetected = "black" 
     Else 
-        Speaker.Note(50,"F4",200)
-        colDetected = "none"
+    colDetected = "none"
     EndIf
-    Program.Delay(100)
 EndSub
 
 Sub readCol_left
@@ -171,3 +161,8 @@ EndWhile
 'white -- 32 2 8/29  25/26
 
 
+
+
+
+
+'bg -- 30-45, 20-40 , 20-40

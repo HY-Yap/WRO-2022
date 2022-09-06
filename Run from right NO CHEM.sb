@@ -239,34 +239,6 @@ Sub readVal
 EndSub
 
 
-Sub liftChem
-  chemStartRot = Motor.GetCount("B")
-  If chemPos = 0 Then
-    targetangle = 50
-    Rencdturn()
-    Motor.Move("A",100,130,"True") 'lower claw
-    Motor.MoveSync("BC",20,20,140,"True") 'approach chemical
-    Motor.Move("A",-10,95,"True") 'pick up chemical
-    Motor.MoveSync("BC",-20,-20,140,"True") 'move back
-    targetangle = - 50
-    Rencdturn()
-    Motor.Stop("BC","True")
-  ElseIf chemPos = 1 Then
-    targetangle = -50
-    Lencdturn()
-    Motor.Move("A",100,130,"True") 'lower claw
-    Motor.MoveSync("BC",20,20,140,"True") 'approach chemical
-    Motor.Move("A",-10,95,"True") 'pick up chemical
-    Motor.MoveSync("BC",-20,-20,140,"True") 'move back
-    targetangle = 50
-    Lencdturn()
-    Motor.Stop("BC","True")
-  EndIf
-  Extra = Extra + (chemStartRot - Motor.GetCount("B"))
-  pickupChem = 1
-EndSub
-
-
 Sub readCol_right
   Program.Delay(500)
   colDetected = "e"
@@ -277,15 +249,9 @@ Sub readCol_right
   For i = 1 To 100
       readVal()
       If R_right > 35 And R_right < 40 And G_right > 31 And G_right < 37 And B_right > 25 And B_right < 33 Then
-          ' If rawValueR[0] > 10 And rawValue[1] > 10 And rawValue[2] > 10 Then
             white = white + 1
-          ' Else 
-          '   none = none + 1
-          ' EndIf
       ElseIf R_right > 65 And R_right < 81 And G_right > 10 And G_right < 31 And B_right > 5 And B_right < 16 Then
           red = red + 1
-      ElseIf R_right > 10 And R_right < 38 And G_right > 35 And G_right < 61 And B_right > 22 And B_right < 40 Then
-          black = black + 1
       Else 
           none = none + 1
       EndIf
@@ -297,10 +263,6 @@ Sub readCol_right
     Speaker.Note(50,"D4",200) 'red
     colDetected = "red"
     dispenseWater()
-  ElseIf black > white And black > red And black > none Then
-    Speaker.Note(50,"E4",200) 'black
-    colDetected = "black"
-    liftChem()
   Else
     Speaker.Note(50,"F4",200) 'none
     colDetected = "none"
@@ -318,8 +280,6 @@ Sub readCol_left
     readVal()
     If R_left > 65 And R_left < 81 And G_left > 10 And G_left < 31 and B_left > -1 and B_left < 16 Then
       red = red + 1
-    ElseIf R_left > -1 And R_left < 40 And G_left > 31 And G_left < 80 And rawValueL[2] < 10 Then
-      black = black + 1
     ElseIf (R_left = 0 Or R_left = (100/3) Or R_left = 100 Or R_left = 60 Or R_left = 50 Or (rawValueL[0] > -1 And rawValueL[0] < 4) ) And (G_left = 0 Or G_left = (100/3) Or G_left = 100 Or G_left = 60 Or G_left = 50 Or (rawValueL[1] > -1 And rawValueL[1] < 4) ) And (B_left = 0 Or B_left = (100/3) Or B_left = 100 Or B_left = 60 Or B_left = 50 Or (rawValueL[2] > -1 And rawValueL[2] < 4) ) Then
       none = none + 1
     Else 
@@ -333,10 +293,6 @@ Sub readCol_left
     Speaker.Note(50,"D4",200) 'red
     colDetected = "red"
     dispenseWater()
-  ElseIf black > white And black > red And black > none Then
-    Speaker.Note(50,"E4",200) 'black
-    colDetected = "black"
-    liftChem()
   Else
     Speaker.Note(50,"F4",200) 'none
     colDetected = "none"
@@ -638,7 +594,7 @@ startRotation = Motor.GetCount("B")
 Extra = 0
 baseSpeed = 20
 startAngle = Sensor.ReadRawValue(3,0) 'startAngle = gyro value
-targetAngle = 4
+targetAngle = 1
 count = 0
 diffRotation = Motor.GetCount("B") - startRotation
 
@@ -657,7 +613,7 @@ If colDetected = "white" Then
   markBrown = 1
 EndIf
 
-targetAngle = 0
+targetAngle = 1
 While diffRotation < 1010 'gForward until reaches the nineth box
   gForward()
   diffRotation = Motor.GetCount("B") - startRotation - Extra
@@ -676,7 +632,7 @@ EndIf
 targetAngle = 0
 Pturn()
 Program.Delay(200)
-Motor.MoveSync("BC",-20,-20,360,"True") 'reverse
+Motor.MoveSync("BC",-20,-20,350,"True") 'reverse
 Motor.Stop("BC","True")
 Program.Delay(500)
 targetangle = -90
@@ -703,7 +659,7 @@ EndWhile
 Motor.Stop("BC","True")
 
 Program.Delay(500)
-targetangle = 90
+targetangle = 100
 Rencdturn()
 
 startRotation = Motor.GetCount("B")
@@ -799,18 +755,9 @@ baseSpeed = 90
     LCD.Update()
   EndWhile
 
-If pickupChem = 1 Then 'if chemical is picked up
-  Motor.Stop("BC","True")
-  Motor.Move("A",30,97,"True") 'put down chemical
-  targetangle = -90
-  Program.Delay(500)
-  Lencdturn()
-  Motor.Move("A",-50,132,"True")
+targetangle = -90
+Lencdturn()
 
-Else
-  targetangle = -90
-  Lencdturn()
-EndIf
 
 Program.Delay(1000)
 Motor.StartSync("BC",-50,-50) 'wall bang
@@ -831,11 +778,14 @@ Program.Delay(4000)
 Motor.Stop("BC","True")
 
 
-Motor.MoveSync("BC",20,20,140,"True")
+startRotation = Motor.GetCount("B")
+baseSpeed = 20
+
+Motor.MoveSync("BC",20,20,155,"True")
 
 startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
-targetangle = 88
-Lencdturn()
+targetAngle = 88
+LpTurn()
 Motor.Stop("BC","True")
 
 Motor.StartSync("BC",-20,-20) 'wall bang
@@ -844,111 +794,115 @@ Motor.Stop("BC","True")
 startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
 
 Motor.MoveSync("BC",20,20,340,"True")
-Motor.Move("A",40,170,"True") 'grab block 1
-Motor.Stop("A","True")
+Motor.Move("A",40,135,"True") 'grab block 1
 
-' markBlue = 1
-' markYellow = 1
+Motor.MoveSync("BC",20,20,390,"True")
+Motor.Stop("BC","True")
+Program.Delay(500)
+
+
+Motor.Start("A",1) 'grab block 2
+Motor.Move("BC",5,30,100)
+
+Program.Delay(1000)
+Motor.Stop("A", "True")
+
 
 If markBrown = 1 Then
-    targetangle = 90
-    Lencdturn()    
-    Motor.MoveSync("BC",20,20,70,"True") 'move to brown
-    Motor.Move("A",-40,170,"True") 'release marking block
-    Motor.MoveSync("BC",-20,-20,70,"True")
-    targetangle = 0
-    Lencdturn()
+    Motor.MoveSync("BC",20,0,800,"True")
+    Motor.Stop("A","True")
+    Motor.MoveSync("BC",20,20,150,"True")
+    Motor.Move("A",-40,20,"True") 'release marking block
+    Motor.MoveSync("BC",-20,-20,150,"True")
+    Motor.MoveSync("BC",-20,0,800,"True")
     markBrown = 0
-ElseIf markWhite = 1 Then
-    targetangle = 45
-    Lencdturn()    
-    Motor.MoveSync("BC",20,20,250,"True") 'move to white
-    Motor.Move("A",-40,170,"True") 'release marking block
-    Motor.MoveSync("BC",-20,-20,250,"True")
-    targetangle = 0
-    Lencdturn()
+ElseIf markWhite = 1 Then 
+  Motor.MoveSync("BC",20,0,670,"True")
+    Motor.Stop("A","True")
+    Motor.Move("A",-40,20,"True") 'release marking block
+    Motor.MoveSync("BC",-20,0,670,"True")
     markWhite = 0
 ElseIf markBlue = 1 Then
-    targetangle = 30
-    Lencdturn()    
-    Motor.MoveSync("BC",20,20,400,"True") 'move to blue
-    Motor.Move("A",-40,170,"True") 'release marking block
-    Motor.MoveSync("BC",-20,-20,400,"True")
-    targetangle = 0
-    Lencdturn()
+    Motor.MoveSync("BC",20,0,520,"True")
+    Motor.Stop("A","True")
+    Motor.Move("A",-40,20,"True") 'release marking block
+    Motor.MoveSync("BC",-20,0,520,"True")
     markBlue = 0
-ElseIf markRed = 1 Then 
-    targetangle = 80
-    Lencdturn() 'move to red
-    Motor.Move("A",-40,170,"True") 'release marking block
-    targetangle = 0
-    Lencdturn()
-    markRed = 0
-ElseIf markYellow = 1 Then
-    Motor.MoveSync("BC",20,20,150,"True")
-    targetangle = 75
-    Lencdturn() 'move to yellow
-    Motor.Move("A",-40,170,"True") 'release marking block
-    targetangle = 0
-    Lencdturn()
-    Motor.MoveSync("BC",-20,-20,150,"True")  
-    markYellow = 0 
-EndIf
-
-Motor.MoveSync("BC",20,20,420,"True")
-Motor.Stop("BC","True")
-Motor.Move("A",40,170,"True") 'grab block 2
-
-If markGreen = 1 Then
-    targetangle = 75
-    Lencdturn() 'move to green
-    Motor.Move("A",-40,170,"True") 'release marking block
-    targetangle = 0
-    Lencdturn()
+ElseIf markGreen = 1 Then 
+    Motor.MoveSync("BC", -20, -20, 100, "True")   
+    Motor.MoveSync("BC", 20, 0, 260, "True") 
+    Motor.Stop("A", "True")
+    Motor.Move("A",-40,20,"True") 'release marking block
+    Motor.MoveSync("BC", -20, 0, 260, "True") 
+    Motor.MoveSync("BC", 20, 20, 100, "True")   
     markGreen = 0
 ElseIf markYellow = 1 Then 
-    targetangle = 200
-    Lencdturn() 'move to yellow
-    Motor.Move("A",-40,170,"True") 'release marking block
-    targetangle = 0
-    Lencdturn()
+    Motor.MoveSync("BC", -20, -20, 300, "True")   
+    Motor.MoveSync("BC", 20, 0, 240, "True") 
+    Motor.Stop("A", "True")
+    Motor.Move("A",-40,20,"True")
+    Motor.MoveSync("BC", -20, 0, 240, "True") 
+    Motor.MoveSync("BC", 20, 20, 300, "True")   
     markYellow = 0
-ElseIf markRed = 1 Then
-    targetangle = 200
-    Lencdturn() 'move to yellow
-    Motor.MoveSync("BC",20,20,150,"True")
-    Motor.Move("A",-40,170,"True") 'release marking block
-    Motor.MoveSync("BC",-20,-20,150,"True")
-    targetangle = 0
-    Lencdturn()
-    markRed = 0
-ElseIf markBlue = 1 Then 
-    targetangle = 90
-    Lencdturn()
-    Motor.MoveSync("BC",20,20,70,"True")
-    Motor.Move("A",-40,170,"True") 'release marking block
-    Motor.MoveSync("BC",-20,-20,70,"True")
-    targetangle = 0
-    Lencdturn()
-    markBlue = 0    
-ElseIf markWhite = 1 Then
-    targetangle = 140
-    Lencdturn()
-    Motor.MoveSync("BC",20,20,70,"True")
-    Motor.Move("A",-40,170,"True") 'release marking block
-    Motor.MoveSync("BC",-20,-20,70,"True")
-    targetangle = 0
-    Lencdturn()    
-    markWhite = 0
 EndIf
 
-Motor.StartSync("BC",-50,-50)
+If markBlue = 1 Then
+    Motor.MoveSync("BC",20,0,550,"True")
+    Motor.MoveSync("BC", 10, 10, 50, "True")
+    Motor.Stop("A","True")
+    Motor.Move("A",-40,130,"True") 'release marking block
+    Motor.MoveSync("BC", -10, -10, 50, "True")
+    Motor.MoveSync("BC",-20,0,550,"True")
+    markBlue = 0
+ElseIf markRed = 1 Then
+    Motor.MoveSync("BC", -20, -20, 500, "True")   
+    Motor.MoveSync("BC", 20, 0, 260, "True") 
+    Motor.Stop("A", "True")
+    Motor.Move("A",-40,130,"True")
+    Motor.MoveSync("BC", -20, 0, 260, "True") 
+    markRed = 0
+ElseIf markWhite = 1 Then 
+    Motor.MoveSync("BC",20,0,800,"True")
+    Motor.Stop("A","True")
+    Motor.MoveSync("BC",20,20,150,"True")
+    Motor.Move("A",-40,130,"True") 'release marking block
+    Motor.MoveSync("BC",-20,-20,150,"True")
+    Motor.MoveSync("BC",-20,0,800,"True")
+    markBrown = 0
+ElseIf markBrown = 1 Then
+    Motor.MoveSync("BC",20,0,670,"True")
+    Motor.Stop("A","True")
+    Motor.Move("A",-40,130,"True") 'release marking block
+    Motor.MoveSync("BC",-20,0,670,"True")
+    markWhite = 0
+ElseIf markGreen = 1 Then 
+    Motor.MoveSync("BC", -20, -20, 100, "True")   
+    Motor.MoveSync("BC", 20, 0, 260, "True") 
+    Motor.Stop("A", "True")
+    Motor.Move("A",-40,130,"True") 'release marking block
+    Motor.MoveSync("BC", -20, 0, 260, "True")   
+    markGreen = 0
+ElseIf markYellow = 1 Then 
+    Motor.MoveSync("BC", -20, -20, 300, "True")   
+    Motor.MoveSync("BC", 20, 0, 260, "True") 
+    Motor.Stop("A", "True")
+    Motor.Move("A",-40,130,"True")
+    Motor.MoveSync("BC", -20, 0, 260, "True")   
+    markYellow = 0
+
+EndIf
+
+Motor.StartSync("BC",-25,-25) 'wall bang
 Program.Delay(2000)
 Motor.Stop("BC","True")
 
-startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
-targetangle = 90
-Lencdturn()
+Motor.MoveSync("BC",50,50,100,"True") 'move out a bit
+
+Motor.Start("A", -5)
+
+targetangle = 125
+encdturn()
 Motor.StartSync("BC",40,40)
 Program.Delay(2000)
 Motor.Stop("BC","True")
+Motor.MoveSync("BC", -10, -10, 30, "True")

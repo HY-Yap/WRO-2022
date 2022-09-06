@@ -1,0 +1,71 @@
+'Invert motors
+
+Motor.Invert("B") 'left motor
+'right motor is C, no need to invert
+
+targetangle = 0
+
+Sub encdturn
+  derivative = 0
+  integral = 0
+  lastError = 0
+  targetrotations = ((targetangle/360)*32.5)*25.6
+  startrotations = Motor.GetCount("B")
+  currentrotations = Motor.GetCount("B") - startrotations
+  error = targetrotations - currentrotations
+  While error > 1 Or error < -1
+    error = targetrotations - currentrotations
+    integral = error + integral
+    derivative = error - lastError
+    lastError = error
+    speed =  (error * 0.75) + (integral * 0.00025) + (derivative * 1) 
+    Motor.Start("B", speed)
+    Motor.Start("C", -speed)
+    currentrotations = Motor.GetCount("B") - startrotations
+    EndWhile
+    Motor.Stop("BC","True")
+EndSub  
+
+Sub Lencdturn
+  derivative = 0
+  integral = 0
+  lastError = 0
+  targetrotations = ((targetangle/360)*32.5*2)*25.6
+  startrotations = Motor.GetCount("B")
+  currentrotations = Motor.GetCount("B") - startrotations
+  error = targetrotations - currentrotations
+  While error > 1 Or error < -1
+    error = targetrotations - currentrotations
+    integral = error + integral
+    derivative = error - lastError
+    lastError = error
+    speed =  (error * 0.75) + (integral * 0.00025) + (derivative * 1)
+    Motor.StartSync("BC", speed,0)
+    currentrotations = Motor.GetCount("B") - startrotations
+    EndWhile
+    Motor.Stop("BC","True")
+EndSub  
+
+Sub Rencdturn
+  derivative = 0
+  integral = 0
+  lastError = 0
+  targetrotations = ((targetangle/360)*31.75*2)*25.6
+  startrotations = Motor.GetCount("C")
+  currentrotations = -(Motor.GetCount("C") - startrotations)
+  error = targetrotations - currentrotations
+  While error > 1 Or error < -1
+    error = targetrotations - currentrotations
+    integral = error + integral
+    derivative = error - lastError
+    lastError = error
+    speed =  (error * 0.75) + (integral * 0.00025) + (derivative * 1)
+    Motor.StartSync("BC", 0,-speed)
+    currentrotations = -(Motor.GetCount("C") - startrotations)
+    EndWhile
+    Motor.Stop("BC","True")
+EndSub    
+
+targetangle = -90
+encdturn()
+Program.End()

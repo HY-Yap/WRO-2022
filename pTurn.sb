@@ -79,10 +79,12 @@ EndSub
 
 'Example Code
 
-startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
-Speaker.Tone(100,1000,1000)
-Program.Delay(1000)
-targetAngle = 90
-pTurn()
-Speaker.Tone(100,1000,1000)
-Program.Delay(1000)
+While "True"
+  startAngle = Sensor.ReadRawValue(3,0) 'start angle = gyro value
+  Speaker.Tone(100,1000,1000)
+  Program.Delay(1000)
+  targetAngle = 90
+  LpTurn()
+  Speaker.Tone(100,1000,1000)
+  Program.Delay(1000)
+EndWhile

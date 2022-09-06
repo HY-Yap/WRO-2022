@@ -1,0 +1,31 @@
+dispenseCount = 0 
+dispenseNow = 0
+
+Sub dispenseWater
+    If dispenseNow = 1 Then 'if water should dispense NOW
+        If dispenseCount = 0 Then 'if nothing has been dropped yet
+            Motor.Move("D",50,110,"True") 'dispense first block
+            Program.Delay(500) 'wait for block to drop
+            Motor.Start("D",-7) 'reset dispenser
+            Program.Delay(1000)
+            Motor.Stop("D","True")
+            dispenseCount = 1
+            dispenseNow = 0
+        ElseIf dispenseCount = 1 Then 'if first water has already been dispensed
+            Motor.Move("D",50,200,"True")
+        EndIf
+    ElseIf dispenseNow = 2 Then 'if water should be dispensed LATER
+        dispenseNow = 1
+    EndIf
+EndSub 
+
+
+
+
+Motor.Move("D",50,110,"True")
+Program.Delay(1000)
+Motor.Start("D",-7)
+Program.Delay(1000)
+Motor.Stop("D","True")
+Program.Delay(1000)
+Motor.Move("D",50,200,"True")

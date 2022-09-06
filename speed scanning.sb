@@ -1,0 +1,169 @@
+'RUN ONLY WHEN ON FULL BATTERY
+'RESET GYRO BEFORE EACH RUN
+
+Sensor.SetMode(2, 4) 'left light sensor NXT - RGB
+Sensor.SetMode(1, 4)  'right light sensor NXT - RGB
+Sensor.SetMode(4, 4) 'line tracking sensor  - RGB
+Sensor.SetMode(3, 0) 'gyro
+
+
+'Variables to be initialised
+
+minSpeed = 0
+maxSpeed = 0
+
+startMotor = 0
+endMotor = 0
+
+targetAngle = 0
+startAngle = 0
+
+thres = 250
+lastError = 0
+
+baseSpeed = 30
+
+extra = 0
+stopped = 0
+
+markBlue = 0
+markGreen = 0
+markYellow = 0
+markRed = 0
+markBrown = 0
+markWhite = 0
+
+white = 0
+black = 0
+red = 0
+none = 0
+
+chemPos = 0
+
+'##############################################################
+
+
+'Invert motors
+
+Motor.Invert("B") 'left motor
+'right motor is C, no need to invert
+
+'##############################################################
+
+
+'Functions
+
+Sub readVal
+  rawValue = Sensor.ReadRaw(4,3) 'read RGB values of the floor
+  rawValueL = Sensor.ReadRaw(2,3) 'read RGB values of left
+  rawValueR = Sensor.ReadRaw(1,3) 'read RGB values of right
+  lightVal[0] = rawValue[0] + rawValue[1] + rawValue[2]
+  lightVal[3] = rawValue[1]
+  lightVal[1] = rawValueL[0] + rawValueL[1] + rawValueL[2]
+  lightVal[2] = rawValueR[0] + rawValueR[1] + rawValueR[2]
+  If (rawValue[0] + rawValue[1] + rawValue[2]) <> 0 Then
+    R_floor = ( rawValue[0] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+    G_floor = ( rawValue[1] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+    B_floor = ( rawValue[2] / (rawValue[0] + rawValue[1] + rawValue[2]) )*100
+  Else
+    R_floor = 0
+    G_floor = 0
+    B_floor = 0
+  EndIf
+  If (rawValueL[0] + rawValueL[1] + rawValueL[2]) <> 0 Then
+    R_left = ( rawValueL[0] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+    G_left = ( rawValueL[1] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+    B_left = ( rawValueL[2] / (rawValueL[0] + rawValueL[1] + rawValueL[2]) )*100
+  Else
+    R_left = 0
+    G_left = 0
+    B_left = 0
+  EndIf
+  If (rawValueR[0] + rawValueR[1] + rawValueR[2]) <> 0 Then
+    R_right = ( rawValueR[0] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+    G_right = ( rawValueR[1] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+    B_right = ( rawValueR[2] / (rawValueR[0] + rawValueR[1] + rawValueR[2]) )*100
+  Else
+    R_right = 0
+    G_right = 0
+    B_right = 0
+    EndIf
+EndSub
+
+Sub gError 'calculate new currentAngle, diffAngle and error
+  currentAngle = Sensor.ReadRawValue(3,0) 'current angle = gyro value
+  diffAngle = currentAngle - startAngle
+  error = targetAngle - diffAngle
+EndSub
+
+Sub pTurn 'before using this function, define startAngle & targetAngle
+  integral = 0
+  lastError = 0
+  gError()
+  While diffAngle <> targetAngle 'or error <> 0 (they mean the same thing)
+      integral = error + integral
+      derivative = error - lastError
+      lastError = error
+      speed =  (error * 0.45) + (integral * 0.0005) + (derivative * 1)
+      Motor.StartSync("BC",speed,-speed)
+      gError()
+  EndWhile
+  Motor.Stop("BC","True")
+EndSub
+
+
+
+Sub gForward 'before using this function, define startAngle and baseSpeed
+  integral = 0
+  lastError = 0
+  gError()
+  integral = error + integral
+  derivative = error - lastError
+  lastError = error
+  speed =  (error * 0.35) + (derivative * 0.5)
+  Motor.StartSync("BC",baseSpeed+speed,baseSpeed-speed)
+  gError()
+EndSub
+
+Sub gFwd
+    startMotor = (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2
+    accelEnd = 20 'accels in 80
+    minSpeed = 10
+    maxSpeed = 40
+    integral = 0
+    lastError = 0
+    While (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < endMotor + startMotor
+        gError()
+        integral = error + integral
+        derivative = error - lastError
+        lastError = error
+        speed =  (error * 0.5) + (derivative * 0.5) 'correction to 0 deg
+        If (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < startMotor + accelEnd Then 
+            baseSpeed = Math.Power((Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2/(startMotor + accelEnd),2)*(maxSpeed-minSpeed)+minSpeed
+            speed =  (error * 0.5) + (derivative * 0.5)
+            Motor.StartSync("BC",baseSpeed+speed,baseSpeed-speed) 'accelerate            
+        ElseIf (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 >= startMotor + accelEnd And (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < (startMotor + endMotor) Then
+            If (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 < endMotor - accelEnd Then
+                speed =  (error * 0.5) + (derivative * 0.5)
+                Motor.StartSync("BC",maxSpeed+speed,maxSpeed-speed) 'move at max speed
+            ElseIf (Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2 >= endMotor - accelEnd + startMotor Then
+                baseSpeed = Math.Power((Math.Ceiling(Motor.GetCount("B")) + Math.Ceiling(Motor.GetCount("C")))/2/(startMotor + accelEnd),2)*(maxSpeed-minSpeed)+minSpeed
+                speed =  (error * 0.5) + (derivative * 0.5)
+                Motor.StartSync("BC",baseSpeed + speed,baseSpeed - speed) 'deccelerate
+            EndIf
+        EndIf
+    EndWhile
+    Motor.Stop("BC","True")
+EndSub
+
+
+'##############################################################
+
+
+'Code
+
+startAngle = Sensor.ReadRawValue(3,0) 'current angle = gyro value
+endMotor = 1280
+gFwd()
+Motor.Stop("BC","True")
+Program.End()

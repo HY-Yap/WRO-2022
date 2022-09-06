@@ -55,9 +55,9 @@ While "True"
   LCD.Text(1,1,43,2,R_right)
   LCD.Text(1,60,43,2,G_right)
   LCD.Text(1,120,43,2,B_right)
-  LCD.Text(1,1,66,2,rawValueL[0])
-  LCD.Text(1,60,64,2,rawValueL[1])
-  LCD.Text(1,120,63,2,rawValueL[2])
+  LCD.Text(1,1,66,2,rawValueR[0])
+  LCD.Text(1,60,64,2,rawValueR[1])
+  LCD.Text(1,120,63,2,rawValueR[2])
   LCD.Update()
   Program.Delay(100)
 EndWhile
